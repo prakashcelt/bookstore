@@ -1,28 +1,23 @@
 import express from 'express';
-import { PORT, mongoDBURL } from './config.js';
 import mongoose from 'mongoose';
-import booksRoute from './routes/booksRoute.js';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from "dotenv";
+import booksRoute from "./routes/booksRoute.js"
 
-// New way to get __dirname in ES Modules
+// Define __filename and __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load environment variables from the specified path
+const customEnvPath = path.resolve(__dirname, '../.env'); // Adjust this path as needed
+dotenv.config({ path: customEnvPath });
+
 const app = express();
 
-// Middleware for parsing request body
 app.use(express.json());
-
-// Middleware for handling CORS POLICY
 app.use(cors());
-
-// Test route
-// app.get('/', (request, response) => {
-//   console.log(request);
-//   return response.status(234).send('Welcome To MERN Stack Tutorial');
-// });
 
 app.use('/books', booksRoute);
 
@@ -33,15 +28,17 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
+console.log('DBURL:', process.env.DBURL);
+console.log('PORT:', process.env.PORT);
 
 mongoose
-  .connect(mongoDBURL)
+  .connect(process.env.DBURL)
   .then(() => {
     console.log('App connected to database');
-    app.listen(PORT, () => {
-      console.log(`App is listening to port: ${PORT}`);
+    app.listen(process.env.PORT, () => {
+      console.log(`App is listening on port: ${process.env.PORT}`);
     });
   })
   .catch((error) => {
-    console.log(error);
+    console.error('Error connecting to the database', error);
   });
